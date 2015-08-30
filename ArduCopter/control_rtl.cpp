@@ -126,6 +126,8 @@ void Copter::rtl_return_start()
 
     wp_nav.set_wp_destination(destination);
 
+    aerokontiki.on_rtl_start();
+
     // initialise yaw to point home (maybe)
     set_auto_yaw_mode(get_default_auto_yaw_mode(true));
 }
@@ -329,6 +331,8 @@ void Copter::rtl_land_start()
 
     // initialise altitude target to stopping point
     pos_control.set_target_to_stopping_point_z();
+
+    aerokontiki.on_rtl_hover();
 
     // initialise yaw
     set_auto_yaw_mode(AUTO_YAW_HOLD);

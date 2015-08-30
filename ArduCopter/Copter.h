@@ -115,6 +115,8 @@
 // Local modules
 #include "Parameters.h"
 
+#include "AeroKontiki.h"
+
 class Copter {
     public:
     friend class GCS_MAVLINK;
@@ -514,7 +516,10 @@ private:
         uint8_t dynamic_flight          : 1;    // 0   // true if we are moving at a significant speed (used to turn on/off leaky I terms)
         uint8_t init_targets_on_arming  : 1;    // 1   // true if we have been disarmed, and need to reset rate controller targets when we arm
     } heli_flags;
+
 #endif
+
+    AeroKontiki aerokontiki;
 
     static const AP_Scheduler::Task scheduler_tasks[];
     static const AP_Param::Info var_info[];
