@@ -198,6 +198,13 @@ public:
         k_param_gcs_pid_mask,    // 126
 
         //
+        // Kontiki params
+        //
+        k_param_rtl_servo_channel = 130,
+        k_param_rtl_servo_open_pwm,
+        k_param_rtl_servo_close_pwm,
+
+        //
         // 135 : reserved for Solo until features merged with master
         //
         k_param_rtl_speed_cms = 135,
@@ -502,6 +509,11 @@ public:
     AP_Int8                 autotune_axis_bitmask;
     AP_Float                autotune_aggressiveness;
     AP_Float                autotune_min_d;
+
+    // Kontiki
+    AP_Int8                 rtl_servo_channel;      // Channel to run servo on in RTL start
+    AP_Int16                rtl_servo_open_pwm;     // PWM value to send on "open" command
+    AP_Int16                rtl_servo_close_pwm;    // PWM value to send on "close" command
 
     // Note: keep initializers here in the same order as they are declared
     // above.

@@ -236,6 +236,26 @@ const AP_Param::Info Copter::var_info[] PROGMEM = {
     // @User: Standard
     GSCALAR(rtl_loiter_time,      "RTL_LOIT_TIME",    RTL_LOITER_TIME),
 
+    // @Param: RTL_SERVO_CHAN
+    // @DisplayName: RTL Servo Channel
+    // @Description: The channel (if any) to send a PWM value to (0 for none)
+    // @Range: 0 12
+    // @Increment: 1
+    // @User: Standard
+    GSCALAR(rtl_servo_channel,  "RTL_SERVO_CHAN", RTL_SERVO_CHANNEL_DEFAULT),
+
+    // @Param: RTL_OPEN_PWM
+    // @DisplayName: RTL Servo Open PWM
+    // @Description: The PWM value to send on "open" command during RTL start
+    // @User: Standard
+    GSCALAR(rtl_servo_open_pwm,  "RTL_OPEN_PWM", RTL_SERVO_OPEN_PWM_DEFAULT),
+
+    // @Param: RTL_CLOSE_PWM
+    // @DisplayName: RTL Servo Close PWM
+    // @Description: The PWM value to send on "close" command during RTL hover
+    // @User: Standard
+    GSCALAR(rtl_servo_close_pwm,  "RTL_CLOSE_PWM", RTL_SERVO_CLOSE_PWM_DEFAULT),
+
     // @Param: LAND_SPEED
     // @DisplayName: Land speed
     // @Description: The descent speed for the final stage of landing in cm/s

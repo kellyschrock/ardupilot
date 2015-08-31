@@ -690,6 +690,19 @@
  # define ALT_HOLD_ACCEL_MAX 250    // if you change this you must also update the duplicate declaration in AC_WPNav.h
 #endif
 
+// Kontiki
+#ifndef RTL_SERVO_CHANNEL_DEFAULT
+  #define RTL_SERVO_CHANNEL_DEFAULT 9
+#endif
+
+#ifndef RTL_SERVO_OPEN_PWM_DEFAULT
+  #define RTL_SERVO_OPEN_PWM_DEFAULT 1100
+#endif
+
+#ifndef RTL_SERVO_CLOSE_PWM_DEFAULT
+  #define RTL_SERVO_CLOSE_PWM_DEFAULT 1900
+#endif
+
 //////////////////////////////////////////////////////////////////////////////
 // Dataflash logging control
 //

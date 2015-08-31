@@ -7,7 +7,7 @@
 #define SERVO_HOOK_PWM_CLOSE 1900
 
 void AeroKontiki::on_rtl_start() {
-    open_hook();
+   open_hook();
 }
 
 void AeroKontiki::on_rtl_hover() {
@@ -15,10 +15,14 @@ void AeroKontiki::on_rtl_hover() {
 }
 
 void AeroKontiki::open_hook() {
-    mServoRelayEvents->do_set_servo(SERVO_HOOK_CHANNEL, SERVO_HOOK_PWM_OPEN);
+    if(mParams->rtl_servo_channel > 0) {
+        mServoRelayEvents->do_set_servo(mParams->rtl_servo_channel, mParams->rtl_servo_open_pwm);
+    }
 }
 
 void AeroKontiki::close_hook() {
-    mServoRelayEvents->do_set_servo(SERVO_HOOK_CHANNEL, SERVO_HOOK_PWM_CLOSE);
+    if(mParams->rtl_servo_channel > 0) {
+        mServoRelayEvents->do_set_servo(mParams->rtl_servo_channel, mParams->rtl_servo_close_pwm);
+    }
 }
 
