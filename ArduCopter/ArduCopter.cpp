@@ -428,6 +428,7 @@ void Copter::three_hz_loop()
 #if AC_FENCE == ENABLED
     // check if we have breached a fence
     fence_check();
+
 #endif // AC_FENCE_ENABLED
 
 #if SPRAYER == ENABLED
