@@ -40,7 +40,7 @@ AP_BattMonitor_SMBus_SUI::AP_BattMonitor_SMBus_SUI(AP_BattMonitor &mon,
     : AP_BattMonitor_SMBus(mon, mon_state, std::move(dev), full_cap_register, rem_cap_register, temp_register, serial_register),
     _cell_count(cell_count)
 {
-    _pec_supported = true;
+    _pec_supported = false;
     _dev->register_periodic_callback(100000, FUNCTOR_BIND_MEMBER(&AP_BattMonitor_SMBus_SUI::timer, void));
 }
 
