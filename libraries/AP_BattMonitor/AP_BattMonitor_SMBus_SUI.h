@@ -30,13 +30,14 @@ protected:
 
     // read_block - returns number of characters read if successful, zero if unsuccessful
     uint8_t read_block(uint8_t reg, uint8_t* data, uint8_t max_len, bool append_zero) const;
-    // virtual bool read_temp(void);
+    uint8_t read_block_bare(uint8_t reg, uint8_t* data, uint8_t max_len, bool append_zero) const;
 
     uint8_t _button_press_count;
 
     uint8_t _current_register;
     uint8_t _voltage_register;
     uint8_t _cell_count;
+    int32_t _capacity;
 };
 
 // Xray battery

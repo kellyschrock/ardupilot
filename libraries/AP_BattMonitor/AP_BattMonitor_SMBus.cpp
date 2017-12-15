@@ -2,7 +2,7 @@
 
 #define AP_BATTMONITOR_SMBUS_PEC_POLYNOME 0x07 // Polynome for CRC generation
 
-#define BATTMONITOR_SMBUS_TEMP                 0x04 // temperature register
+#define BATTMONITOR_SMBUS_TEMP                 0x08 // temperature register
 #define BATTMONITOR_SMBUS_REMAINING_CAPACITY   0x0F // remaining capacity
 #define BATTMONITOR_SMBUS_FULL_CHARGE_CAPACITY 0x10 // full charge capacity
 #define BATTMONITOR_SMBUS_SERIAL               0x1C // serial number

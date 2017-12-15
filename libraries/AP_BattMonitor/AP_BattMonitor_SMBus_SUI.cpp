@@ -17,13 +17,13 @@
  * Other potentially useful registers, listed here for future use
  * #define BATTMONITOR_SMBUS_SUI_VOLTAGE           0x09    // voltage register
  * #define BATTMONITOR_SMBUS_SUI_BATTERY_STATUS    0x16    // battery status register including alarms
- * #define BATTMONITOR_SMBUS_SOLO_DESIGN_CAPACITY   0x18    // design capacity register
- * #define BATTMONITOR_SMBUS_SOLO_DESIGN_VOLTAGE    0x19    // design voltage register
- * #define BATTMONITOR_SMBUS_SOLO_SERIALNUM         0x1c    // serial number register
- * #define BATTMONITOR_SMBUS_SOLO_MANUFACTURE_NAME  0x20    // manufacturer name
- * #define BATTMONITOR_SMBUS_SOLO_DEVICE_NAME       0x21    // device name
- * #define BATTMONITOR_SMBUS_SOLO_DEVICE_CHEMISTRY  0x22    // device chemistry
- * #define BATTMONITOR_SMBUS_SOLO_MANUFACTURE_INFO  0x25    // manufacturer info including cell voltage
+ * #define BATTMONITOR_SMBUS_SUI_DESIGN_CAPACITY   0x18    // design capacity register
+ * #define BATTMONITOR_SMBUS_SUI_DESIGN_VOLTAGE    0x19    // design voltage register
+ * #define BATTMONITOR_SMBUS_SUI_SERIALNUM         0x1c    // serial number register
+ * #define BATTMONITOR_SMBUS_SUI_MANUFACTURE_NAME  0x20    // manufacturer name
+ * #define BATTMONITOR_SMBUS_SUI_DEVICE_NAME       0x21    // device name
+ * #define BATTMONITOR_SMBUS_SUI_DEVICE_CHEMISTRY  0x22    // device chemistry
+ * #define BATTMONITOR_SMBUS_SUI_MANUFACTURE_INFO  0x25    // manufacturer info including cell voltage
  */
 
 // Constructor
@@ -38,7 +38,9 @@ AP_BattMonitor_SMBus_SUI::AP_BattMonitor_SMBus_SUI(AP_BattMonitor &mon,
                     uint8_t voltage_register,
                     uint8_t cell_count)
     : AP_BattMonitor_SMBus(mon, mon_state, std::move(dev), full_cap_register, rem_cap_register, temp_register, serial_register),
-    _cell_count(cell_count)
+    _current_register(current_register),
+    _cell_count(MIN(4, cell_count)),
+    _capacity(0)
 {
     _pec_supported = false;
     _dev->register_periodic_callback(100000, FUNCTOR_BIND_MEMBER(&AP_BattMonitor_SMBus_SUI::timer, void));
@@ -61,28 +63,17 @@ void AP_BattMonitor_SMBus_SUI::timer()
             _has_cell_voltages = true;
 
             // accumulate the pack voltage out of the total of the cells
-            // because the Solo's I2C bus is so noisy, it's worth not spending the
-            // time and bus bandwidth to request the pack voltage as a seperate
-            // transaction
             _state.voltage = pack_voltage_mv * 1e-3;
             _state.last_time_micros = tnow;
             _state.healthy = true;
         }
     } else {
         // voltage will be read below
-        _state.healthy = true;
         _has_cell_voltages = false;
     }
 
-    // timeout after 5 seconds
-    if ((tnow - _state.last_time_micros) > AP_BATTMONITOR_SMBUS_TIMEOUT_MICROS) {
-        _state.healthy = false;
-        // do not attempt to ready any more data from battery
-        return;
-    }
-
     // read current
-    if (read_block(_current_register, buff, 4, false) == 4) {
+    if (read_block_bare(_current_register, buff, 4, false) == 4) {
         _state.current_amps = -(float)((int32_t)((uint32_t)buff[3]<<24 | (uint32_t)buff[2]<<16 | (uint32_t)buff[1]<<8 | (uint32_t)buff[0])) / 1000.0f;
         _state.last_time_micros = tnow;
     }
@@ -92,11 +83,33 @@ void AP_BattMonitor_SMBus_SUI::timer()
         if (read_block(_voltage_register, buff, 2, false) == 2) {
             _state.voltage = (float)((uint32_t)buff[1]<<8 | (uint32_t)buff[0]) / 1000.0f;
             _state.last_time_micros = tnow;
+            _state.healthy = true;
         }
     }
 
-    read_full_charge_capacity();
-    read_remaining_capacity();
+    if(_full_charge_capacity == 0) {
+        if(read_block_bare(_full_cap_register, buff, 4, false) == 4) {
+            _full_charge_capacity = ((uint16_t)buff[3]<<24 | (uint16_t)buff[2]<<16 | (uint16_t)buff[1]<<8 | (uint16_t)buff[0]);
+        }
+    }
+
+    if(_capacity == 0) {
+        _capacity = get_capacity();
+    }
+
+    if (_capacity > 0) {
+        if(read_block_bare(_rem_cap_register, buff, 4, false) == 4) {
+            uint16_t data = ((uint16_t)buff[3]<<24 | (uint16_t)buff[2]<<16 | (uint16_t)buff[1]<<8 | (uint16_t)buff[0]);
+            _state.current_total_mah = MAX(0, _capacity - data);
+        }
+    }
+
+    // timeout after 5 seconds
+    if ((tnow - _state.last_time_micros) > AP_BATTMONITOR_SMBUS_TIMEOUT_MICROS) {
+        _state.healthy = false;
+        // do not attempt to ready any more data from battery
+        return;
+    }
 
     // read the button press indicator
     if (read_block(BATTMONITOR_SMBUS_SUI_MANUFACTURE_DATA, buff, 6, false) == 6) {
@@ -159,6 +172,18 @@ uint8_t AP_BattMonitor_SMBus_SUI::read_block(uint8_t reg, uint8_t* data, uint8_t
 
     // return success
     return bufflen;
+}
+
+// read_bare_block - returns number of characters read if successful, zero if unsuccessful
+uint8_t AP_BattMonitor_SMBus_SUI::read_block_bare(uint8_t reg, uint8_t* data, uint8_t max_len, bool append_zero) const
+{
+    // read bytes
+    if (!_dev->read_registers(reg, data, max_len)) {
+        return 0;
+    }
+
+    // return success
+    return max_len;
 }
 
 //
