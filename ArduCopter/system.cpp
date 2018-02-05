@@ -604,6 +604,10 @@ void Copter::allocate_motors(void)
             motors = new AP_MotorsTailsitter(MAIN_LOOP_RATE);
             motors_var_info = AP_MotorsTailsitter::var_info;
             break;
+        case AP_Motors::MOTOR_FRAME_TRI_TAILSITTER:
+            motors = new AP_MotorsTriTailsitter(MAIN_LOOP_RATE);
+            motors_var_info = AP_MotorsTriTailsitter::var_info;
+            break;
 #else // FRAME_CONFIG == HELI_FRAME
         case AP_Motors::MOTOR_FRAME_HELI_DUAL:
             motors = new AP_MotorsHeli_Dual(MAIN_LOOP_RATE);

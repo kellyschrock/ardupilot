@@ -9,4 +9,5 @@
 #include "AP_MotorsSingle.h"
 #include "AP_MotorsCoax.h"
 #include "AP_MotorsTailsitter.h"
+#include "AP_MotorsTriTailsitter.h"
 #include "AP_Motors6DOF.h"
