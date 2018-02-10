@@ -32,6 +32,10 @@ extern const AP_HAL::HAL& hal;
 // init
 void AP_MotorsTriTailsitter::init(motor_frame_class frame_class, motor_frame_type frame_type)
 {
+    motor_enabled[AP_MOTORS_MOT_1] = true;
+    motor_enabled[AP_MOTORS_MOT_2] = true;
+    motor_enabled[AP_MOTORS_MOT_4] = true;
+
     // record successful initialisation if what we setup was the desired frame_class
     _flags.initialised_ok = (frame_class == MOTOR_FRAME_TRI_TAILSITTER);
 }
@@ -80,7 +84,7 @@ void AP_MotorsTriTailsitter::output_to_motors()
             throttle = _spin_min + throttle * (1 - _spin_min);
             throttle_left  = constrain_float(throttle + _rudder*0.5, _spin_min, 1);
             throttle_right = constrain_float(throttle - _rudder*0.5, _spin_min, 1);
-            throttle_top = constrain_float(throttle + _elevator*0.5, _spin_min, 1);
+            throttle_top = constrain_float(throttle - _elevator*0.5, _spin_min, 1);
 
             // initialize limits flags
             limit.roll_pitch = false;

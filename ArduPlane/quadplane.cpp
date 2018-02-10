@@ -569,6 +569,11 @@ bool QuadPlane::setup(void)
         motors_var_info = AP_MotorsTailsitter::var_info;
         rotation = ROTATION_PITCH_90;
         break;
+    case AP_Motors::MOTOR_FRAME_TRI_TAILSITTER:
+        motors = new AP_MotorsTriTailsitter(plane.scheduler.get_loop_rate_hz());
+        motors_var_info = AP_MotorsTriTailsitter::var_info;
+        rotation = ROTATION_PITCH_90;
+        break;
     default:
         motors = new AP_MotorsMatrix(plane.scheduler.get_loop_rate_hz());
         motors_var_info = AP_MotorsMatrix::var_info;
