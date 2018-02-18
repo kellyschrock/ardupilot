@@ -23,7 +23,7 @@
  */
 bool QuadPlane::is_tailsitter(void) const
 {
-    return available() && frame_class == AP_Motors::MOTOR_FRAME_TAILSITTER;
+    return available() && (frame_class == AP_Motors::MOTOR_FRAME_TAILSITTER || frame_class == AP_Motors::MOTOR_FRAME_TRI_TAILSITTER);
 }
 
 /*
@@ -75,6 +75,7 @@ void QuadPlane::tailsitter_output(void)
             SRV_Channels::set_output_scaled(SRV_Channel::k_throttle, throttle);
             SRV_Channels::set_output_scaled(SRV_Channel::k_throttleLeft, throttle);
             SRV_Channels::set_output_scaled(SRV_Channel::k_throttleRight, throttle);
+            SRV_Channels::set_output_scaled(SRV_Channel::k_throttleTop, throttle);
             SRV_Channels::set_output_scaled(SRV_Channel::k_rudder, 0);
             pid_accel_z.set_integrator(throttle*10);
         }

@@ -552,6 +552,9 @@ bool QuadPlane::setup(void)
         break;
     case AP_Motors::MOTOR_FRAME_TAILSITTER:
         break;
+    case AP_Motors::MOTOR_FRAME_TRI_TAILSITTER:
+        // SRV_Channels::set_default_function(CH_3, SRV_Channel::k_throttleTop);
+        break;
     default:
         hal.console->printf("Unknown frame class %u - using QUAD\n", (unsigned)frame_class.get());
         frame_class.set(AP_Motors::MOTOR_FRAME_QUAD);
@@ -680,6 +683,10 @@ void QuadPlane::setup_defaults(void)
     enum AP_Motors::motor_frame_class motor_class;
     motor_class = (enum AP_Motors::motor_frame_class)frame_class.get();
     if (motor_class == AP_Motors::MOTOR_FRAME_TAILSITTER) {
+        setup_defaults_table(defaults_table_tailsitter, ARRAY_SIZE(defaults_table_tailsitter));
+    }
+
+    if (motor_class == AP_Motors::MOTOR_FRAME_TRI_TAILSITTER) {
         setup_defaults_table(defaults_table_tailsitter, ARRAY_SIZE(defaults_table_tailsitter));
     }
     

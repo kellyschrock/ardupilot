@@ -528,6 +528,7 @@ uint8_t Copter::get_frame_mav_type()
         case AP_Motors::MOTOR_FRAME_SINGLE:
         case AP_Motors::MOTOR_FRAME_COAX:
         case AP_Motors::MOTOR_FRAME_TAILSITTER:
+        case AP_Motors::MOTOR_FRAME_TRI_TAILSITTER:
             return MAV_TYPE_COAXIAL;
         case AP_Motors::MOTOR_FRAME_DODECAHEXA:
             return MAV_TYPE_HEXAROTOR;
@@ -562,6 +563,8 @@ const char* Copter::get_frame_string()
             return "COAX";
         case AP_Motors::MOTOR_FRAME_TAILSITTER:
             return "TAILSITTER";
+        case AP_Motors::MOTOR_FRAME_TRI_TAILSITTER:
+            return "TRI_TAILSITTER";
         case AP_Motors::MOTOR_FRAME_DODECAHEXA:
             return "DODECA_HEXA";
         case AP_Motors::MOTOR_FRAME_UNDEFINED:
