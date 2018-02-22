@@ -28,7 +28,7 @@ extern const AP_HAL::HAL& hal;
 
 #define SERVO_OUTPUT_RANGE   4500
 #define THROTTLE_RANGE       100
-#define TOP_THROTTLE_RANGE   30
+#define TOP_THROTTLE_RANGE   70
 
 // init
 void AP_MotorsTriTailsitter::init(motor_frame_class frame_class, motor_frame_type frame_type)
@@ -52,7 +52,7 @@ AP_MotorsTriTailsitter::AP_MotorsTriTailsitter(uint16_t loop_rate, uint16_t spee
 {
     SRV_Channels::set_rc_frequency(SRV_Channel::k_throttleLeft, speed_hz);
     SRV_Channels::set_rc_frequency(SRV_Channel::k_throttleRight, speed_hz);
-    // SRV_Channels::set_rc_frequency(SRV_Channel::k_throttleTop, speed_hz);
+    SRV_Channels::set_rc_frequency(SRV_Channel::k_throttleTop, speed_hz);
 }
 
 void AP_MotorsTriTailsitter::output_to_motors()
@@ -89,7 +89,7 @@ void AP_MotorsTriTailsitter::output_to_motors()
             throttle = _spin_min + throttle * (1 - _spin_min);
             throttle_left  = constrain_float(throttle + _rudder*0.5, _spin_min, 1);
             throttle_right = constrain_float(throttle - _rudder*0.5, _spin_min, 1);
-            throttle_top = constrain_float(throttle - _elevator*0.5, _spin_min, 1);
+            throttle_top = constrain_float(throttle - _elevator, _spin_min, 1);
 
             // initialize limits flags
             limit.roll_pitch = false;
@@ -103,7 +103,6 @@ void AP_MotorsTriTailsitter::output_to_motors()
     SRV_Channels::set_output_scaled(SRV_Channel::k_aileron,  _aileron*SERVO_OUTPUT_RANGE);
     SRV_Channels::set_output_scaled(SRV_Channel::k_elevator, _elevator*SERVO_OUTPUT_RANGE);
     SRV_Channels::set_output_scaled(SRV_Channel::k_rudder,   _rudder*SERVO_OUTPUT_RANGE);
-    SRV_Channels::set_output_scaled(SRV_Channel::k_throttle, throttle*THROTTLE_RANGE);
     SRV_Channels::set_output_scaled(SRV_Channel::k_throttle, throttle*THROTTLE_RANGE);
 
     // also support differential roll with twin motors
@@ -136,6 +135,8 @@ void AP_MotorsTriTailsitter::output_armed_stabilizing()
         _throttle = _throttle_thrust_max;
         limit.throttle_upper = true;
     }
+
+    // gcs().send_text(MAV_SEVERITY_ERROR, "pitch=%f\n", _pitch_in);
 
     _throttle = constrain_float(_throttle, 0.1, 1);
 }

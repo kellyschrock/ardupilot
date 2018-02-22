@@ -740,6 +740,7 @@ void QuadPlane::multicopter_attitude_rate_update(float yaw_rate_cds, float smoot
                                                                       plane.nav_pitch_cd,
                                                                       yaw_rate_cds,
                                                                       smooth_gain);
+        motors->set_pitch(0.5);
     } else {
         // use the fixed wing desired rates
         float roll_rate = plane.rollController.get_pid_info().desired;
