@@ -161,7 +161,11 @@ protected:
     AP_Int8             _disarm_disable_pwm;    // disable PWM output while disarmed
 
     // Maximum lean angle of yaw servo in degrees. This is specific to tricopter
-    AP_Float            _yaw_servo_angle_max_deg;
+    AP_Float            _yaw_servo_angle_max_deg;    
+
+    // Thrust ratio
+    AP_Float            _thrust_ratio;
+
 
     // time to spool motors to min throttle
     AP_Float            _spool_up_time;

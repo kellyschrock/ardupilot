@@ -147,6 +147,13 @@ const AP_Param::GroupInfo AP_MotorsMulticopter::var_info[] = {
     // @User: Advanced
     AP_GROUPINFO("SAFE_DISARM", 23, AP_MotorsMulticopter, _disarm_disable_pwm, 0),
 
+    // @Param: THST_RATIO
+    // @DisplayName: Thrust ratio of rear motor
+    // @Description: Thrust ratio of rear motor
+    // @Range: 0.1 2
+    // @User: Standard
+    AP_GROUPINFO_FRAME("THST_RATIO", 35, AP_MotorsMulticopter,  _thrust_ratio, 0.5f, AP_PARAM_FRAME_TRICOPTER),    
+
     // @Param: YAW_SV_ANGLE
     // @DisplayName: Yaw Servo Max Lean Angle
     // @Description: Yaw servo's maximum lean angle
