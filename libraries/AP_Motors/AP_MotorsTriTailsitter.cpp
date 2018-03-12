@@ -23,6 +23,10 @@
 #include <GCS_MAVLink/GCS.h>
 #include "AP_MotorsTriTailsitter.h"
 
+#define SERVO_OUTPUT_RANGE   4500
+#define THROTTLE_RANGE       100
+#define TOP_THROTTLE_RANGE   70
+
 extern const AP_HAL::HAL& hal;
 
 // init
@@ -54,13 +58,13 @@ void AP_MotorsTriTailsitter::init(motor_frame_class frame_class, motor_frame_typ
     _yaw2_servo->set_angle(AP_MOTORS_SERVO_INPUT_RANGE);
 
     // record successful initialisation if what we setup was the desired frame_class
-    _flags.initialised_ok = (frame_class == MOTOR_FRAME_TRI);
+    _flags.initialised_ok = (frame_class == MOTOR_FRAME_TRI_TAILSITTER);
 }
 
 // set frame class (i.e. quad, hexa, heli) and type (i.e. x, plus)
 void AP_MotorsTriTailsitter::set_frame_class_and_type(motor_frame_class frame_class, motor_frame_type frame_type)
 {
-    _flags.initialised_ok = (frame_class == MOTOR_FRAME_TRI);
+    _flags.initialised_ok = (frame_class == MOTOR_FRAME_TRI_TAILSITTER);
 }
 
 // set update rate to motors - a value in hertz
@@ -90,8 +94,20 @@ void AP_MotorsTriTailsitter::enable()
 
 void AP_MotorsTriTailsitter::output_to_motors()
 {
+
+    float throttle = _throttle;
+    // float throttle_left  = 0;
+    // float throttle_right = 0;
+    // float throttle_top = 0;
+
     switch (_spool_mode) {
         case SHUT_DOWN:
+            // set limits flags
+            limit.roll_pitch = true;
+            limit.yaw = true;
+            limit.throttle_lower = true;
+            limit.throttle_upper = true;
+
             // sends minimum values out to the motors
             rc_write(AP_MOTORS_MOT_1, get_pwm_output_min());
             rc_write(AP_MOTORS_MOT_2, get_pwm_output_min());
@@ -105,6 +121,13 @@ void AP_MotorsTriTailsitter::output_to_motors()
             break;
         case SPIN_WHEN_ARMED:
             // sends output to motors when armed but not flying
+            throttle = constrain_float(_spin_up_ratio, 0.0f, 1.0f) * _spin_min;
+            // set limits flags
+            limit.roll_pitch = true;
+            limit.yaw = true;
+            limit.throttle_lower = true;
+            limit.throttle_upper = true;
+
             rc_write(AP_MOTORS_MOT_1, calc_spin_up_to_pwm());
             rc_write(AP_MOTORS_MOT_2, calc_spin_up_to_pwm());
             rc_write(AP_MOTORS_MOT_3, calc_spin_up_to_pwm());
@@ -118,16 +141,60 @@ void AP_MotorsTriTailsitter::output_to_motors()
         case SPOOL_UP:
         case THROTTLE_UNLIMITED:
         case SPOOL_DOWN:
+            // NOTE: From old TriTailsitter
+            throttle = _spin_min + throttle * (1 - _spin_min);
+            // throttle_left  = constrain_float(throttle + _rudder*0.5, _spin_min, 1);
+            // throttle_right = constrain_float(throttle - _rudder*0.5, _spin_min, 1);
+            // throttle_top = constrain_float(throttle - _elevator, _spin_min, 1);
+
+            // initialize limits flags
+            limit.roll_pitch = false;
+            limit.yaw = false;
+            limit.throttle_lower = false;
+            limit.throttle_upper = false;
+            // end
+
+            //
+            // Here is some mashing between Leonard's and my code.
+            // Need to resolve which channels go to what outputs.
+            //
+
+            // Leonard
             // set motor output based on thrust requests
-            rc_write(AP_MOTORS_MOT_1, calc_thrust_to_pwm(_thrust_right));
-            rc_write(AP_MOTORS_MOT_2, calc_thrust_to_pwm(_thrust_rear));
-            rc_write(AP_MOTORS_MOT_3, calc_thrust_to_pwm(_thrust_left));
+            // rc_write(AP_MOTORS_MOT_1, calc_thrust_to_pwm(_thrust_right));
+            // rc_write(AP_MOTORS_MOT_2, calc_thrust_to_pwm(_thrust_rear));
+            // rc_write(AP_MOTORS_MOT_3, calc_thrust_to_pwm(_thrust_left));
             rc_write(AP_MOTORS_CH_TRI_YAW1, calc_pwm_output_1to1(_deflection_yaw, _yaw1_servo));
             rc_write(AP_MOTORS_CH_TRI_YAW2, calc_pwm_output_1to1(_deflection_yaw, _yaw2_servo));
+
             SRV_Channels::set_output_scaled(SRV_Channel::k_elevator, _pitch_in*AP_MOTORS_SERVO_INPUT_RANGE);
             SRV_Channels::set_output_scaled(SRV_Channel::k_aileron,   _yaw_in*AP_MOTORS_SERVO_INPUT_RANGE);
             SRV_Channels::set_output_scaled(SRV_Channel::k_elevon_left,  (_pitch_in + _yaw_in)*AP_MOTORS_SERVO_INPUT_RANGE);
             SRV_Channels::set_output_scaled(SRV_Channel::k_elevon_right, (_pitch_in - _yaw_in)*AP_MOTORS_SERVO_INPUT_RANGE);
+            // end
+
+            // NOTE: From old TriTailsitter
+            // outputs are setup here, and written to the HAL by the plane servos loop
+            // SRV_Channels::set_output_scaled(SRV_Channel::k_elevator, _elevator*SERVO_OUTPUT_RANGE);
+            // SRV_Channels::set_output_scaled(SRV_Channel::k_aileron,  _aileron*SERVO_OUTPUT_RANGE);
+            // SRV_Channels::set_output_scaled(SRV_Channel::k_rudder,   _rudder*SERVO_OUTPUT_RANGE);
+            // SRV_Channels::set_output_scaled(SRV_Channel::k_throttle, throttle*THROTTLE_RANGE);
+
+            // also support differential roll with twin motors
+            // SRV_Channels::set_output_scaled(SRV_Channel::k_throttleLeft,  throttle_left*THROTTLE_RANGE);
+            // SRV_Channels::set_output_scaled(SRV_Channel::k_throttleRight, throttle_right*THROTTLE_RANGE);
+            // SRV_Channels::set_output_scaled(SRV_Channel::k_throttleTop, throttle_top * TOP_THROTTLE_RANGE);
+            // end
+
+            SRV_Channels::set_output_scaled(SRV_Channel::k_rudder,   _rudder*SERVO_OUTPUT_RANGE);
+            SRV_Channels::set_output_scaled(SRV_Channel::k_throttle, throttle*THROTTLE_RANGE);
+            // SRV_Channels::set_output_scaled(SRV_Channel::k_throttleLeft,  calc_thrust_to_pwm(_thrust_left));
+            // SRV_Channels::set_output_scaled(SRV_Channel::k_throttleRight, calc_thrust_to_pwm(_thrust_right));
+            // SRV_Channels::set_output_scaled(SRV_Channel::k_throttleTop, calc_thrust_to_pwm(_thrust_rear));
+            SRV_Channels::set_output_scaled(SRV_Channel::k_throttleLeft,  _thrust_left*THROTTLE_RANGE);
+            SRV_Channels::set_output_scaled(SRV_Channel::k_throttleRight, _thrust_right*THROTTLE_RANGE);
+            SRV_Channels::set_output_scaled(SRV_Channel::k_throttleTop, _thrust_rear*TOP_THROTTLE_RANGE);
+
             break;
     }
 }
@@ -161,8 +228,21 @@ void AP_MotorsTriTailsitter::output_armed_stabilizing()
     // apply voltage and air pressure compensation
     roll_thrust = _roll_in * get_compensation_gain();
     pitch_thrust = _pitch_in; // this does not use compensation as it is a collective pitch propeller on a governor.
-    yaw_thrust = _yaw_in * get_compensation_gain(); // we scale this so a thrust request of 1.0f will ask for full servo deflection at full rear throttle
+    
+    // NOTE: See below
+    // yaw_thrust = _yaw_in * get_compensation_gain(); // we scale this so a thrust request of 1.0f will ask for full servo deflection at full rear throttle
+
+    // NOTE: Modded from Leonard to reverse the yaw sign
+    yaw_thrust = -_yaw_in * get_compensation_gain(); // we scale this so a thrust request of 1.0f will ask for full servo deflection at full rear throttle
+
     throttle_thrust = get_throttle() * get_compensation_gain();
+
+    // NOTE: From old TriTailsitter
+    _throttle = get_throttle();
+    // _aileron = -_yaw_in;
+    _elevator = _pitch_in;
+    _rudder = _roll_in;
+    // end
 
     float thrust_max = 1.0f;
 

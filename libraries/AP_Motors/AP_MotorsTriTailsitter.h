@@ -62,4 +62,10 @@ protected:
     float           _thrust_right;
     float           _thrust_rear;
     float           _thrust_left;
+
+    // calculated outputs
+    // float _aileron;  // -1..1
+    float _elevator; // -1..1
+    float _rudder;   // -1..1
+    float _throttle; // 0..1
 };
