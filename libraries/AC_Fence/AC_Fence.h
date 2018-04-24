@@ -15,6 +15,7 @@
 #define AC_FENCE_TYPE_ALT_MAX                       1       // high alt fence which usually initiates an RTL
 #define AC_FENCE_TYPE_CIRCLE                        2       // circular horizontal fence (usually initiates an RTL)
 #define AC_FENCE_TYPE_POLYGON                       4       // polygon horizontal fence
+#define AC_FENCE_TYPE_LOW_ALT                       8       // low-alt fence
 
 // valid actions should a fence be breached
 #define AC_FENCE_ACTION_REPORT_ONLY                 0       // report to GCS that boundary has been breached but take no further action
@@ -27,6 +28,7 @@
 #define AC_FENCE_ALT_MAX_BACKUP_DISTANCE            20.0f   // after fence is broken we recreate the fence 20m further up
 #define AC_FENCE_CIRCLE_RADIUS_BACKUP_DISTANCE      20.0f   // after fence is broken we recreate the fence 20m further out
 #define AC_FENCE_MARGIN_DEFAULT                     2.0f    // default distance in meters that autopilot's should maintain from the fence to avoid a breach
+#define AC_FENCE_ALT_MIN_RADIUS_DEFAULT             15.0f   // default alt-min radius
 
 // give up distance
 #define AC_FENCE_GIVE_UP_DISTANCE                   100.0f  // distance outside the fence at which we should give up and just land.  Note: this is not used by library directly but is intended to be used by the main code
@@ -80,7 +82,7 @@ public:
     /// get_safe_alt - returns maximum safe altitude (i.e. alt_max - margin)
     float get_safe_alt_max() const { return _alt_max - _margin; }
 
-    /// get_safe_alt_min - returns the minimum safe altitude (i.e. alt_min - margin)
+    /// get_safe_alt_min - returns the minimum safe altitude (i.e. alt_min + margin)
     float get_safe_alt_min() const { return _alt_min + _margin; }
 
     /// get_radius - returns the fence radius in meters
@@ -88,6 +90,9 @@ public:
 
     /// get_margin - returns the fence margin in meters
     float get_margin() const { return _margin.get(); }
+
+    /// get_alt_min_radius - returns the radius beyond which low-alt fence is active
+    float get_alt_min_radius() const { return _alt_min_radius.get(); }
 
     /// manual_recovery_start - caller indicates that pilot is re-taking manual control so fence should be disabled for 10 seconds
     ///     should be called whenever the pilot changes the flight mode
@@ -140,6 +145,7 @@ private:
     AP_Float        _circle_radius;         // circle fence radius in meters
     AP_Float        _margin;                // distance in meters that autopilot's should maintain from the fence to avoid a breach
     AP_Int8         _total;                 // number of polygon points saved in eeprom
+    AP_Float        _alt_min_radius;        // Low-alt fence-active radius
 
     // backup fences
     float           _alt_max_backup;        // backup altitude upper limit in meters used to refire the breach if the vehicle continues to move further away

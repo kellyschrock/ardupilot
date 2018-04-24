@@ -83,13 +83,54 @@ void AC_Avoid::adjust_velocity_z(float kP, float accel_cmss, float& climb_rate_c
         return;
     }
 
-    // do not adjust climb_rate if level or descending
-    if (climb_rate_cms <= 0.0f) {
+    // if level, do nothing
+    if ((float)fabs(climb_rate_cms - 0.0f) < 0.001f) {
         return;
     }
 
     // limit acceleration
     float accel_cmss_limited = MIN(accel_cmss, AC_AVOID_ACCEL_CMSS_MAX);
+
+    // if descending
+    if (climb_rate_cms < 0.0f) {
+
+        bool limit_low_alt = false;
+        float low_alt_diff_cm = 0.0f;
+
+        // calculate low-alt fence distance
+        if ((_enabled & AC_AVOID_STOP_AT_FENCE) > 0 && (_fence.get_enabled_fences() & AC_FENCE_TYPE_LOW_ALT) > 0) {
+            // distance from low-altitude limit to vehicle in cm
+            // positive means vehicle is above low-limit altitude
+            low_alt_diff_cm = 0.0f;
+
+            // get position as a 2D offset in cm from ahrs home
+            const Vector2f position_xy = get_position();
+
+            // If at or outside the alt-min radius, low-alt fence is active.
+            if (position_xy.length() >= (_fence.get_alt_min_radius() * 100.0f)) {
+                const float veh_alt = get_alt_above_home();
+
+                low_alt_diff_cm = (veh_alt - (_fence.get_safe_alt_min() * 100.0f));
+                // Don't inhibit descent unless within the configured margin
+                limit_low_alt = (low_alt_diff_cm <= (_fence.get_margin() * 100.0f));
+            } else {
+                limit_low_alt = false;
+            }
+        }
+
+        if (limit_low_alt) {
+            // do not allow dropping if we've breached the min safe altitude
+            if (low_alt_diff_cm <= 0.0f) {
+                // Ascend to min alt within 2 seconds, or at climb rate if it was gentle
+                climb_rate_cms = MIN(-(low_alt_diff_cm / 2), -climb_rate_cms);
+            } else {
+                // limit drop rate
+                climb_rate_cms = MAX(-10.0f, climb_rate_cms);
+            }
+        }
+
+        return;
+    }
 
     bool limit_alt = false;
     float alt_diff_cm = 0.0f;   // distance from altitude limit to vehicle in cm (positive means vehicle is below limit)

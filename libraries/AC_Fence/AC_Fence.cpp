@@ -16,10 +16,10 @@ const AP_Param::GroupInfo AC_Fence::var_info[] = {
     // @Param: TYPE
     // @DisplayName: Fence Type
     // @Description: Enabled fence types held as bitmask
-    // @Values: 0:None,1:Altitude,2:Circle,3:Altitude and Circle,4:Polygon,5:Altitude and Polygon,6:Circle and Polygon,7:All
-    // @Bitmask: 0:Altitude,1:Circle,2:Polygon
+    // @Values: 0:None,1:Altitude,2:Circle,3:Altitude and Circle,4:Polygon,5:Altitude and Polygon,6:Circle and Polygon,8:LowAlt,10:Circle and LowAlt,11:Altitude and Circle and Low-Alt,13:Altitude and Polygon and Low-Alt,15:All
+    // @Bitmask: 0:Altitude,1:Circle,2:Polygon,4:Low-alt,8
     // @User: Standard
-    AP_GROUPINFO("TYPE",        1,  AC_Fence,   _enabled_fences,  AC_FENCE_TYPE_ALT_MAX | AC_FENCE_TYPE_CIRCLE | AC_FENCE_TYPE_POLYGON),
+    AP_GROUPINFO("TYPE",        1,  AC_Fence,   _enabled_fences,  AC_FENCE_TYPE_ALT_MAX | AC_FENCE_TYPE_CIRCLE | AC_FENCE_TYPE_POLYGON | AC_FENCE_TYPE_LOW_ALT),
 
     // @Param: ACTION
     // @DisplayName: Fence Action
@@ -67,7 +67,16 @@ const AP_Param::GroupInfo AC_Fence::var_info[] = {
     // @Range: -100 100
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO_FRAME("ALT_MIN",     7,  AC_Fence,   _alt_min,       AC_FENCE_ALT_MIN_DEFAULT, AP_PARAM_FRAME_SUB),
+    AP_GROUPINFO_FRAME("ALT_MIN",     7,  AC_Fence,   _alt_min, AC_FENCE_ALT_MIN_DEFAULT, AP_PARAM_FRAME_COPTER|AP_PARAM_FRAME_SUB),
+
+    // @Param: AMIN_RADIUS
+    // @DisplayName: Fence Alt-min radius
+    // @Description: Distance beyond which the low-alt fence takes effect.
+    // @Units: Meters
+    // @Range: 5 100
+    // @User: Standard
+    AP_GROUPINFO("AMIN_RDS",      8,  AC_Fence,   _alt_min_radius, AC_FENCE_ALT_MIN_RADIUS_DEFAULT),
+
 
     AP_GROUPEND
 };
@@ -240,6 +249,9 @@ uint8_t AC_Fence::check_fence(float curr_alt)
             }
         }
     }
+
+    // no low-alt fence check done here. The point is
+    // to avoid landing outside a radius, not prevent arming
 
     // return any new breaches that have occurred
     return ret;

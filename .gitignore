@@ -87,3 +87,8 @@ status.txt
 tags
 terrain/
 test.ArduCopter/*
+todo.txt
+.idea/
+CMakeLists.txt
+cmake-build-debug/
+
