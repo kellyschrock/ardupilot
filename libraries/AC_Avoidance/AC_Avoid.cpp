@@ -121,11 +121,11 @@ void AC_Avoid::adjust_velocity_z(float kP, float accel_cmss, float& climb_rate_c
         if (limit_low_alt) {
             // do not allow dropping if we've breached the min safe altitude
             if (low_alt_diff_cm <= 0.0f) {
-                // Ascend to min alt within 2 seconds, or at climb rate if it was gentle
-                climb_rate_cms = MIN(-(low_alt_diff_cm / 2), -climb_rate_cms);
+                // Ascend at climb rate
+                climb_rate_cms = -climb_rate_cms; //MIN(-(low_alt_diff_cm / 2), -climb_rate_cms);
             } else {
                 // limit drop rate
-                climb_rate_cms = MAX(-10.0f, climb_rate_cms);
+                climb_rate_cms = MAX(-2.0f, climb_rate_cms);
             }
         }
 
