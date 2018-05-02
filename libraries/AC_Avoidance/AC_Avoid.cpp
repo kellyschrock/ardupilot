@@ -84,7 +84,7 @@ void AC_Avoid::adjust_velocity_z(float kP, float accel_cmss, float& climb_rate_c
     }
 
     // if level, do nothing
-    if ((float)fabs(climb_rate_cms - 0.0f) < 0.001f) {
+    if (is_zero(climb_rate_cms)) {
         return;
     }
 
@@ -96,6 +96,7 @@ void AC_Avoid::adjust_velocity_z(float kP, float accel_cmss, float& climb_rate_c
 
         bool limit_low_alt = false;
         float low_alt_diff_cm = 0.0f;
+        float adj_climb_rate = climb_rate_cms;
 
         // calculate low-alt fence distance
         if ((_enabled & AC_AVOID_STOP_AT_FENCE) > 0 && (_fence.get_enabled_fences() & AC_FENCE_TYPE_LOW_ALT) > 0) {
@@ -111,6 +112,14 @@ void AC_Avoid::adjust_velocity_z(float kP, float accel_cmss, float& climb_rate_c
                 const float veh_alt = get_alt_above_home();
 
                 low_alt_diff_cm = (veh_alt - (_fence.get_safe_alt_min() * 100.0f));
+
+                float decel_scale = (-(low_alt_diff_cm) / climb_rate_cms);
+
+                // Limit/scale the drop rate according to how far above the limit we are.
+                // So if we're 100cm above the limit and descending at -200cms, this
+                // limits descent to -100cms.
+                adj_climb_rate = MAX(climb_rate_cms, -(low_alt_diff_cm * decel_scale));
+
                 // Don't inhibit descent unless within the configured margin
                 limit_low_alt = (low_alt_diff_cm <= (_fence.get_margin() * 100.0f));
             } else {
@@ -121,11 +130,11 @@ void AC_Avoid::adjust_velocity_z(float kP, float accel_cmss, float& climb_rate_c
         if (limit_low_alt) {
             // do not allow dropping if we've breached the min safe altitude
             if (low_alt_diff_cm <= 0.0f) {
-                // Ascend at climb rate
-                climb_rate_cms = -climb_rate_cms; //MIN(-(low_alt_diff_cm / 2), -climb_rate_cms);
+                // Ascend at climb rate or 0.5 m/s
+                climb_rate_cms = MAX(50.0f, -climb_rate_cms);
             } else {
                 // limit drop rate
-                climb_rate_cms = MAX(-2.0f, climb_rate_cms);
+                climb_rate_cms = adj_climb_rate;
             }
         }
 
