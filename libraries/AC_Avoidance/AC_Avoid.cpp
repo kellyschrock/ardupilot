@@ -83,16 +83,11 @@ void AC_Avoid::adjust_velocity_z(float kP, float accel_cmss, float& climb_rate_c
         return;
     }
 
-    // if level, do nothing
-    if (is_zero(climb_rate_cms)) {
-        return;
-    }
-
     // limit acceleration
     float accel_cmss_limited = MIN(accel_cmss, AC_AVOID_ACCEL_CMSS_MAX);
 
     // if descending
-    if (climb_rate_cms < 0.0f) {
+    if (climb_rate_cms <= 0.0f) {
 
         bool limit_low_alt = false;
         float low_alt_diff_cm = 0.0f;
